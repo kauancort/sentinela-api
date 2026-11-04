@@ -1,0 +1,22 @@
+# Dependencies and build output
+node_modules/
+dist/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Prisma
+prisma/*.db
+prisma/*.db-journal
+
+# Docker volumes and logs
+mysql-data/
+*.log
+
+# Editors and operating system files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
