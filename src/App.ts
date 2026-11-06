@@ -5,6 +5,8 @@ import morgan from 'morgan';
 import swaggerUi from 'swagger-ui-express';
 
 import { swaggerSpec } from './Config/Swagger';
+import { simulacaoAplicacaoMultaRoutes } from './Presentation/SimulacaoAplicacaoMulta/SimulacaoAplicacaoMultaRoutes';
+import { errorHandler } from './Shared/Middlewares/ErrorHandler';
 
 export const app = express();
 
@@ -18,3 +20,9 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.get('/health', (_request, response) => {
   response.status(200).json({ status: 'ok' });
 });
+
+// Rotas dos Módulos
+app.use('/simulacoes-multa', simulacaoAplicacaoMultaRoutes);
+
+// Middleware Global de Tratamento de Erros
+app.use(errorHandler);

@@ -7,4 +7,22 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Os modelos serao criados quando o dominio do projeto for definido.
+enum StatusSimulacao {
+  PENDENTE
+  APROVADA
+  REJEITADA
+}
+
+model SimulacaoAplicacaoMulta {
+  id              Int             @id @default(autoincrement())
+  placaVeiculo    String          @map("placa_veiculo") @db.VarChar(10)
+  tipoMultaId     Int             @map("tipo_multa_id")
+  dataHoraCaptura DateTime        @default(now()) @map("data_hora_captura")
+  localCaptura    String          @map("local_captura") @db.VarChar(255)
+  status          StatusSimulacao @default(PENDENTE)
+  motivoRejeicao  String?         @map("motivo_rejeicao") @db.Text
+  criadoEm        DateTime        @default(now()) @map("criado_em")
+  atualizadoEm    DateTime        @updatedAt @map("atualizado_em")
+
+  @@map("simulacoes_aplicacao_multa")
+}
