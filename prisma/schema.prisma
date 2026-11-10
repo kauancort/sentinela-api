@@ -7,4 +7,24 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Os modelos serao criados quando o dominio do projeto for definido.
+enum SituacaoCnh {
+  SEM_HABILITACAO
+  REGULAR
+  SUSPENSA
+  CASSADA
+}
+
+model Cidadao {
+  id                        String      @id @default(uuid()) @db.Char(36)
+  nome                      String      @db.VarChar(200)
+  cpf                       String      @unique @db.Char(11)
+  email                     String      @db.VarChar(254)
+  possuiCnh                 Boolean
+  cnhNumero                 String?     @unique @db.VarChar(32)
+  cnhValidade               DateTime?   @db.Date
+  situacaoCnh               SituacaoCnh
+  motivoSituacaoCnh         String?     @db.Text
+  exerceAtividadeRemunerada Boolean
+  criadoEm                  DateTime    @default(now()) @db.DateTime(3)
+  atualizadoEm              DateTime    @updatedAt @db.DateTime(3)
+}

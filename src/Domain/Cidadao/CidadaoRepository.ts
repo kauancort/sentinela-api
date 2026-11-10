@@ -1,10 +1,21 @@
-import { Cidadao } from './Cidadao';
+import { Cidadao, SituacaoCnh } from './Cidadao';
+
+export interface FiltrosCidadao {
+  /** Busca parcial, sem distinção entre maiúsculas e minúsculas conforme a collation do banco. */
+  nome?: string;
+  cpf?: string;
+  email?: string;
+  possuiCnh?: boolean;
+  cnhNumero?: string;
+  situacaoCnh?: SituacaoCnh;
+}
 
 export interface PaginacaoCidadao {
   /** Página baseada em 1. */
   pagina: number;
   /** Quantidade máxima de cidadãos por página. */
   limite: number;
+  filtros?: FiltrosCidadao;
 }
 
 export interface ResultadoPaginado<T> {
