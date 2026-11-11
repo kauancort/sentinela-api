@@ -1,93 +1,61 @@
 # P2 Backend
 
-Base de uma API em **TypeScript**, com **Express**, **Prisma ORM**, **MySQL** em Docker e documentacao em **Swagger**.
+API em TypeScript e Express, com MySQL, Prisma e Swagger. O Docker Compose pode executar a API e o banco juntos.
 
-## Estrutura
+## Requisitos
 
-```text
-src/
-├── Domain/                         # Entidades, contratos de repositorio e erros do dominio
-├── Application/                    # Casos de uso e DTOs, agrupados por funcionalidade
-├── Infrastructure/
-│   └── Persistence/
-│       ├── Prisma/                 # Implementacoes de repositorios do Prisma
-│       └── PrismaClient.ts         # Cliente Prisma compartilhado
-├── Presentation/                   # Controllers, rotas e schemas Swagger por funcionalidade
-├── Shared/
-│   ├── Errors/
-│   ├── Http/
-│   └── Middlewares/
-├── Config/
-│   └── Swagger.ts
-├── App.ts
-└── Server.ts
-```
+Para executar tudo em containers, basta Docker com Compose v2.
 
-As pastas vazias usam `.gitkeep` apenas para permanecerem no Git.
+- **Windows:** instale o Docker Desktop, habilite o mecanismo WSL 2 e a integração com a distribuição Linux que usará. Abra o terminal do Ubuntu/WSL na pasta do projeto.
+- **Linux:** instale Docker Engine e o plugin Docker Compose. Verifique que o serviço está ativo e que seu usuário pode executar `docker`.
+- **API fora do Docker:** instale Node.js `>=20.19` e `<23`.
 
-## Pre-requisitos
+Confira se o Docker está disponível:
 
-No Windows, instale o NVM for Windows e depois uma versao do Node compativel:
-
-```powershell
-nvm install 22
-nvm use 22
-node --version
-npm --version
-```
-
-Tambem e necessario instalar e iniciar o Docker Desktop. Depois, confira:
-
-```powershell
+```sh
 docker --version
 docker compose version
 ```
 
-## Primeira execucao com Docker
+## Iniciar API e banco com Docker
 
-1. Crie o arquivo de ambiente:
+Na raiz do projeto, no terminal WSL ou Linux:
 
-   ```powershell
-   Copy-Item .env.example .env
-   ```
+```sh
+cp .env.example .env
+docker compose up --build -d
+docker compose exec api npx prisma migrate deploy
+```
 
-2. Suba a API e o MySQL:
+Abra <http://localhost:3000/health> para verificar a API e <http://localhost:3000/api-docs> para acessar o Swagger. Para acompanhar os logs, use `docker compose logs -f`; para parar os containers, `docker compose down`.
 
-   ```powershell
-   docker compose up --build
-   ```
+Por padrão, o MySQL fica disponível na porta `3306` do computador e os dados ficam no volume `mysql_data`. Se essa porta já estiver ocupada, defina `MYSQL_HOST_PORT=3307` no `.env` antes de iniciar. Para conectar à API rodando fora do Docker, ajuste também a porta da `DATABASE_URL` para `3307`.
 
-3. Acesse:
+## Executar a API no computador
 
-   - API: `http://localhost:3000/health`
-   - Swagger: `http://localhost:3000/api-docs`
+Use esta opção para rodar o Node no Windows, WSL ou Linux e manter apenas o MySQL em container:
 
-O MySQL fica acessivel pela porta `3306`. Os dados sao persistidos no volume Docker `mysql_data`.
-
-## Execucao local da API
-
-Com o MySQL rodando pelo Docker, mantenha a `DATABASE_URL` do `.env` apontando para `localhost` e execute:
-
-```powershell
+```sh
+cp .env.example .env
+docker compose up -d mysql
 npm install
 npm run prisma:generate
+npm run prisma:deploy
 npm run dev
 ```
 
-Quando houver modelos no arquivo `prisma/schema.prisma`, crie a primeira migration:
+No Windows, os mesmos comandos podem ser executados no PowerShell; para usar `cp`, abra o terminal WSL ou troque por `Copy-Item .env.example .env`. O arquivo `.env.example` já aponta a API local para `localhost:3306`.
 
-```powershell
-npm run prisma:migrate -- --name nome_da_migration
-```
+## Comandos úteis
 
-## Scripts
-
-| Comando | Descricao |
+| Comando | Uso |
 | --- | --- |
-| `npm run dev` | Inicia a API em desenvolvimento com recarregamento automatico. |
+| `npm run dev` | Inicia a API em desenvolvimento. |
 | `npm run build` | Compila TypeScript para `dist/`. |
-| `npm run start` | Executa a versao compilada. |
 | `npm run typecheck` | Verifica os tipos sem gerar arquivos. |
-| `npm run prisma:generate` | Gera o cliente do Prisma. |
-| `npm run prisma:migrate` | Cria e aplica uma migration de desenvolvimento. |
-| `npm run prisma:studio` | Abre a interface visual do Prisma. |
+| `npm run prisma:generate` | Gera o cliente Prisma após alterações no schema. |
+| `npm run prisma:migrate -- --name nome` | Cria e aplica uma migration em desenvolvimento. |
+| `npm run prisma:deploy` | Aplica migrations já existentes. |
+| `npm run prisma:studio` | Abre o Prisma Studio. |
+
+Dentro do container da API, execute os comandos Prisma com `docker compose exec api npx prisma ...`.
