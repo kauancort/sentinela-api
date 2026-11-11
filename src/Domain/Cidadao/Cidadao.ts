@@ -57,7 +57,7 @@ function erro(campo: string, mensagem: string): never {
   throw new ErroValidacaoCidadao(campo, mensagem);
 }
 
-function validarCpf(cpfInformado: string): string {
+export function normalizarCpf(cpfInformado: string): string {
   if (typeof cpfInformado !== 'string') {
     return erro('cpf', 'O CPF deve ser informado como texto.');
   }
@@ -99,7 +99,7 @@ function normalizarDados(input: CriarCidadao | DadosCidadao): DadosCidadao {
   }
 
   const nome = input.nome.trim();
-  const cpf = validarCpf(input.cpf);
+  const cpf = normalizarCpf(input.cpf);
 
   if (typeof input.email !== 'string' || !EMAIL.test(input.email.trim())) {
     return erro('email', 'O e-mail informado é inválido.');

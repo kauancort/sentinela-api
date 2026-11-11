@@ -9,7 +9,7 @@ export const swaggerSpec = swaggerJsdoc({
   definition: {
     openapi: '3.0.3',
     info: {
-      title: 'P2 Backend API',
+      title: 'Sentinela API',
       version: '1.0.0',
       description: 'Documentacao da API.'
     },
