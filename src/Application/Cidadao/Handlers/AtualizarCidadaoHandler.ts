@@ -5,7 +5,7 @@ import {
   ErroConflitoCidadao,
   propagarErroCidadao
 } from '../CidadaoApplicationErrors';
-import { converterAtualizarCidadaoRequest } from '../DTOs/Requests/CidadaoRequestMapper';
+import { validarAtualizarCidadao } from '../../Validator/Cidadao/AtualizarCidadaoValidator';
 import type { AtualizarCidadaoRequestDto } from '../DTOs/Requests/AtualizarCidadaoRequestDto';
 import type { CidadaoResponseDto } from '../DTOs/Responses/CidadaoResponseDto';
 import { mapearCidadaoParaResponse } from '../DTOs/Responses/CidadaoResponseMapper';
@@ -13,14 +13,14 @@ import { mapearCidadaoParaResponse } from '../DTOs/Responses/CidadaoResponseMapp
 export class AtualizarCidadaoHandler {
   constructor(private readonly cidadaos: CidadaoRepository) {}
 
-  async execute(id: string, dto: AtualizarCidadaoRequestDto): Promise<CidadaoResponseDto> {
-    const cidadaoAtual = await this.cidadaos.buscarPorId(id);
-    if (cidadaoAtual === null) throw new ErroCidadaoNaoEncontrado(id);
+  async execute(id: unknown, dto: AtualizarCidadaoRequestDto): Promise<CidadaoResponseDto> {
+    const { id: cidadaoId, dados } = validarAtualizarCidadao(id, dto);
+    const cidadaoAtual = await this.cidadaos.buscarPorId(cidadaoId);
+    if (cidadaoAtual === null) throw new ErroCidadaoNaoEncontrado(cidadaoId);
 
     try {
-      const cidadao = Cidadao.reconstituir(cidadaoAtual.obterDados());
-      // DTO completo: a entidade valida o estado final antes de qualquer gravação.
-      cidadao.atualizar(converterAtualizarCidadaoRequest(dto));
+      const cidadao = new Cidadao(cidadaoAtual, cidadaoAtual.id);
+      cidadao.atualizar(dados);
 
       const porCpf = await this.cidadaos.buscarPorCpf(cidadao.cpf);
       if (porCpf !== null && porCpf.id !== cidadao.id) {

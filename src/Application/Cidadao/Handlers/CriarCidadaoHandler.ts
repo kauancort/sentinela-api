@@ -4,7 +4,7 @@ import {
   ErroConflitoCidadao,
   propagarErroCidadao
 } from '../CidadaoApplicationErrors';
-import { converterCriarCidadaoRequest } from '../DTOs/Requests/CidadaoRequestMapper';
+import { validarCriarCidadao } from '../../Validator/Cidadao/CriarCidadaoValidator';
 import type { CriarCidadaoRequestDto } from '../DTOs/Requests/CriarCidadaoRequestDto';
 import type { CidadaoResponseDto } from '../DTOs/Responses/CidadaoResponseDto';
 import { mapearCidadaoParaResponse } from '../DTOs/Responses/CidadaoResponseMapper';
@@ -14,7 +14,7 @@ export class CriarCidadaoHandler {
 
   async execute(dto: CriarCidadaoRequestDto): Promise<CidadaoResponseDto> {
     try {
-      const cidadao = Cidadao.criar(converterCriarCidadaoRequest(dto));
+      const cidadao = Cidadao.criar(validarCriarCidadao(dto));
       await this.validarUnicidade(cidadao);
       await this.cidadaos.salvar(cidadao);
       return mapearCidadaoParaResponse(cidadao);

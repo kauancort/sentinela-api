@@ -1,3 +1,4 @@
+import { validarBuscarCidadaoPorId } from '../../Validator/Cidadao/BuscarCidadaoPorIdValidator';
 import type { CidadaoRepository } from '../../../Domain/Cidadao/CidadaoRepository';
 import { ErroCidadaoNaoEncontrado } from '../CidadaoApplicationErrors';
 import type { BuscarCidadaoPorIdRequestDto } from '../DTOs/Requests/BuscarCidadaoPorIdRequestDto';
@@ -8,8 +9,9 @@ export class BuscarCidadaoPorIdHandler {
   constructor(private readonly cidadaos: CidadaoRepository) {}
 
   async execute(dto: BuscarCidadaoPorIdRequestDto): Promise<CidadaoResponseDto> {
-    const cidadao = await this.cidadaos.buscarPorId(dto.id);
-    if (cidadao === null) throw new ErroCidadaoNaoEncontrado(dto.id);
+    const id = validarBuscarCidadaoPorId(dto);
+    const cidadao = await this.cidadaos.buscarPorId(id);
+    if (cidadao === null) throw new ErroCidadaoNaoEncontrado(id);
     return mapearCidadaoParaResponse(cidadao);
   }
 }

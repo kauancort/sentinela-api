@@ -50,8 +50,7 @@ function dataSemHorario(data: Date | null): Date | null {
 }
 
 function mapearCidadao(registro: Prisma.CidadaoGetPayload<Record<string, never>>): Cidadao {
-  return Cidadao.reconstituir({
-    id: registro.id,
+  return new Cidadao({
     nome: registro.nome,
     cpf: registro.cpf,
     email: registro.email,
@@ -60,10 +59,8 @@ function mapearCidadao(registro: Prisma.CidadaoGetPayload<Record<string, never>>
     cnhValidade: registro.cnhValidade,
     situacaoCnh: paraSituacaoDominio(registro.situacaoCnh),
     motivoSituacaoCnh: registro.motivoSituacaoCnh,
-    exerceAtividadeRemunerada: registro.exerceAtividadeRemunerada,
-    criadoEm: registro.criadoEm,
-    atualizadoEm: registro.atualizadoEm
-  });
+    exerceAtividadeRemunerada: registro.exerceAtividadeRemunerada
+  }, registro.id);
 }
 
 function montarFiltro(filtros: FiltrosCidadao | undefined): Prisma.CidadaoWhereInput {
@@ -110,7 +107,7 @@ export class CidadaoRepositoryPrisma implements CidadaoRepository {
   constructor(private readonly cliente: PrismaClient = prisma) {}
 
   async salvar(cidadao: Cidadao): Promise<void> {
-    const dados = cidadao.obterDados();
+    const dados = cidadao;
     const dadosComuns = {
       nome: dados.nome,
       cpf: dados.cpf,
@@ -121,7 +118,6 @@ export class CidadaoRepositoryPrisma implements CidadaoRepository {
       situacaoCnh: paraSituacaoPrisma(dados.situacaoCnh),
       motivoSituacaoCnh: dados.motivoSituacaoCnh,
       exerceAtividadeRemunerada: dados.exerceAtividadeRemunerada,
-      atualizadoEm: dados.atualizadoEm
     };
 
     try {
@@ -130,7 +126,6 @@ export class CidadaoRepositoryPrisma implements CidadaoRepository {
         create: {
           id: dados.id,
           ...dadosComuns,
-          criadoEm: dados.criadoEm
         },
         update: dadosComuns
       });

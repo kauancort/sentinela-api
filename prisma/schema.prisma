@@ -25,6 +25,4 @@ model Cidadao {
   situacaoCnh               SituacaoCnh
   motivoSituacaoCnh         String?     @db.Text
   exerceAtividadeRemunerada Boolean
-  criadoEm                  DateTime    @default(now()) @db.DateTime(3)
-  atualizadoEm              DateTime    @updatedAt @db.DateTime(3)
 }

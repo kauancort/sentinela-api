@@ -1,7 +1,6 @@
 import {
   ErroCidadaoVinculado,
   ErroDuplicidadeCidadao,
-  ErroValidacaoCidadao,
   type CampoUnicoCidadao
 } from '../../Domain/Cidadao/CidadaoErrors';
 
@@ -20,7 +19,6 @@ export class ErroAplicacaoCidadao extends Error {
   ) {
     super(mensagem);
     this.name = 'ErroAplicacaoCidadao';
-    Object.setPrototypeOf(this, new.target.prototype);
   }
 }
 
@@ -28,7 +26,6 @@ export class ErroDadosCidadaoInvalidos extends ErroAplicacaoCidadao {
   constructor(campo: string, mensagem: string) {
     super('CIDADAO_DADOS_INVALIDOS', mensagem, campo);
     this.name = 'ErroDadosCidadaoInvalidos';
-    Object.setPrototypeOf(this, new.target.prototype);
   }
 }
 
@@ -36,7 +33,6 @@ export class ErroCidadaoNaoEncontrado extends ErroAplicacaoCidadao {
   constructor(id: string) {
     super('CIDADAO_NAO_ENCONTRADO', `Cidadão com ID ${id} não foi encontrado.`, 'id');
     this.name = 'ErroCidadaoNaoEncontrado';
-    Object.setPrototypeOf(this, new.target.prototype);
   }
 }
 
@@ -50,15 +46,11 @@ export class ErroConflitoCidadao extends ErroAplicacaoCidadao {
     };
     super('CIDADAO_CONFLITO', mensagem ?? mensagens[campo], campo);
     this.name = 'ErroConflitoCidadao';
-    Object.setPrototypeOf(this, new.target.prototype);
   }
 }
 
 /** Converte erros de domínio/persistência para o formato estável da Application. */
 export function propagarErroCidadao(erro: unknown): never {
-  if (erro instanceof ErroValidacaoCidadao) {
-    throw new ErroDadosCidadaoInvalidos(erro.campo, erro.message);
-  }
   if (erro instanceof ErroDuplicidadeCidadao) {
     throw new ErroConflitoCidadao(erro.campo, erro.message);
   }

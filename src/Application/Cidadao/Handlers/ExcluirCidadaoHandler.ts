@@ -1,3 +1,4 @@
+import { validarExcluirCidadao } from '../../Validator/Cidadao/ExcluirCidadaoValidator';
 import type { CidadaoRepository } from '../../../Domain/Cidadao/CidadaoRepository';
 import {
   ErroCidadaoNaoEncontrado,
@@ -9,11 +10,12 @@ export class ExcluirCidadaoHandler {
   constructor(private readonly cidadaos: CidadaoRepository) {}
 
   async execute(dto: ExcluirCidadaoRequestDto): Promise<void> {
-    const cidadao = await this.cidadaos.buscarPorId(dto.id);
-    if (cidadao === null) throw new ErroCidadaoNaoEncontrado(dto.id);
+    const id = validarExcluirCidadao(dto);
+    const cidadao = await this.cidadaos.buscarPorId(id);
+    if (cidadao === null) throw new ErroCidadaoNaoEncontrado(id);
 
     try {
-      await this.cidadaos.excluir(dto.id);
+      await this.cidadaos.excluir(id);
     } catch (erro) {
       propagarErroCidadao(erro);
     }

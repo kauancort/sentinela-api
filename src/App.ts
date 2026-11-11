@@ -1,5 +1,5 @@
 import cors from 'cors';
-import express from 'express';
+import express, { type ErrorRequestHandler } from 'express';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import swaggerUi from 'swagger-ui-express';
@@ -13,7 +13,7 @@ import { ListarCidadaosHandler } from './Application/Cidadao/Handlers/ListarCida
 import { CidadaoRepositoryPrisma } from './Infrastructure/Persistence/Prisma/CidadaoRepositoryPrisma';
 import { prisma } from './Infrastructure/Persistence/PrismaClient';
 import { CidadaoController } from './Presentation/Cidadao/CidadaoController';
-import { cidadaoErrorHandler } from './Presentation/Cidadao/CidadaoErrorHandler';
+import { ErroAplicacaoCidadao, ErroDadosCidadaoInvalidos } from './Application/Cidadao/CidadaoApplicationErrors';
 import { criarCidadaoRoutes } from './Presentation/Cidadao/CidadaoRoutes';
 
 export const app = express();
@@ -39,4 +39,15 @@ const cidadaoController = new CidadaoController(
 );
 
 app.use('/cidadaos', criarCidadaoRoutes(cidadaoController));
-app.use(cidadaoErrorHandler);
+const tratarErro: ErrorRequestHandler = (erro, _request, response, next) => {
+  if (response.headersSent) return next(erro);
+  if (erro instanceof SyntaxError && 'type' in erro && erro.type === 'entity.parse.failed') {
+    erro = new ErroDadosCidadaoInvalidos('body', 'O corpo deve conter JSON valido.');
+  }
+  if (!(erro instanceof ErroAplicacaoCidadao)) return next(erro);
+  const status = { CIDADAO_DADOS_INVALIDOS: 400, CIDADAO_NAO_ENCONTRADO: 404, CIDADAO_CONFLITO: 409 };
+  response.status(status[erro.codigo]).json({
+    erro: { codigo: erro.codigo, mensagem: erro.message, campo: erro.campo }
+  });
+};
+app.use(tratarErro);
