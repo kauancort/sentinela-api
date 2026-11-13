@@ -29,6 +29,7 @@ export interface VeiculoRepository {
   salvar(veiculo: Veiculo): Promise<void>;
   buscarPorId(id: string): Promise<Veiculo | null>;
   buscarPorPlaca(placa: string): Promise<Veiculo | null>;
+  proprietarioExiste(proprietarioId: string): Promise<boolean>;
   listar(paginacao: PaginacaoVeiculo): Promise<ResultadoPaginadoVeiculo>;
   excluir(id: string): Promise<void>;
 }

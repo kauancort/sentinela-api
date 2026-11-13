@@ -1,5 +1,7 @@
 import {
   ErroDuplicidadeVeiculo,
+  ErroProprietarioVeiculoNaoEncontrado as ErroProprietarioVeiculoNaoEncontradoDominio,
+  ErroVeiculoNaoEncontrado as ErroVeiculoNaoEncontradoDominio,
   ErroVeiculoVinculado,
   type CampoUnicoVeiculo
 } from '../../Domain/Veiculo/VeiculoErrors';
@@ -64,6 +66,12 @@ export class ErroConflitoVeiculo extends ErroAplicacaoVeiculo {
 export function propagarErroVeiculo(erro: unknown): never {
   if (erro instanceof ErroDuplicidadeVeiculo) {
     throw new ErroConflitoVeiculo(erro.campo, erro.message);
+  }
+  if (erro instanceof ErroVeiculoNaoEncontradoDominio) {
+    throw new ErroVeiculoNaoEncontrado(erro.id);
+  }
+  if (erro instanceof ErroProprietarioVeiculoNaoEncontradoDominio) {
+    throw new ErroProprietarioVeiculoNaoEncontrado(erro.id);
   }
   if (erro instanceof ErroVeiculoVinculado) {
     throw new ErroConflitoVeiculo('vinculo', erro.message);

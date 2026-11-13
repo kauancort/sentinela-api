@@ -15,6 +15,20 @@ export class ErroDuplicidadeVeiculo extends ErroDominioVeiculo {
   }
 }
 
+export class ErroVeiculoNaoEncontrado extends ErroDominioVeiculo {
+  constructor(public readonly id: string) {
+    super(`Veículo com ID ${id} não foi encontrado.`);
+    this.name = 'ErroVeiculoNaoEncontrado';
+  }
+}
+
+export class ErroProprietarioVeiculoNaoEncontrado extends ErroDominioVeiculo {
+  constructor(public readonly id: string) {
+    super(`O proprietário com ID ${id} não foi encontrado.`);
+    this.name = 'ErroProprietarioVeiculoNaoEncontrado';
+  }
+}
+
 export class ErroVeiculoVinculado extends ErroDominioVeiculo {
   constructor() {
     super('O veículo possui registros vinculados e não pode ser excluído.');
