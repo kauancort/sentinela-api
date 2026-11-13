@@ -127,6 +127,73 @@ export const swaggerSpec = swaggerJsdoc({
               campo: 'cpf'
             }
           }
+        },
+        CatalogoMultaCreateRequest: {
+          type: 'object',
+          required: [
+            'codigo', 'descricao', 'artigoCtb', 'gravidade', 'valorBase',
+            'geraPontos', 'autossuspensiva', 'responsabilidade', 'ativo'
+          ],
+          properties: {
+            codigo: { type: 'string', maxLength: 32, example: '745-50' },
+            descricao: { type: 'string', maxLength: 500, example: 'Transitar em velocidade superior à máxima permitida em mais de 50%' },
+            artigoCtb: { type: 'string', maxLength: 100, example: 'Art. 218, III' },
+            gravidade: { type: 'string', enum: ['LEVE', 'MEDIA', 'GRAVE', 'GRAVISSIMA'], example: 'GRAVISSIMA' },
+            valorBase: { type: 'number', format: 'double', minimum: 0.01, example: 293.47 },
+            multiplicador: { type: 'number', format: 'double', minimum: 0.01, default: 1, example: 3 },
+            geraPontos: { type: 'boolean', example: true },
+            autossuspensiva: { type: 'boolean', example: true },
+            responsabilidade: { type: 'string', enum: ['CONDUTOR', 'PROPRIETARIO'], example: 'CONDUTOR' },
+            ativo: { type: 'boolean', example: true }
+          }
+        },
+        CatalogoMultaUpdateRequest: {
+          allOf: [
+            { $ref: '#/components/schemas/CatalogoMultaCreateRequest' },
+            { type: 'object', required: ['multiplicador'] }
+          ]
+        },
+        CatalogoMultaResponse: {
+          allOf: [
+            { $ref: '#/components/schemas/CatalogoMultaUpdateRequest' },
+            {
+              type: 'object',
+              required: ['id', 'valorCalculado', 'pontosAplicaveis'],
+              properties: {
+                id: { type: 'string', format: 'uuid' },
+                valorCalculado: { type: 'number', format: 'double', readOnly: true, example: 880.41 },
+                pontosAplicaveis: { type: 'integer', readOnly: true, example: 7 }
+              }
+            }
+          ]
+        },
+        ListarCatalogoMultasResponse: {
+          type: 'object',
+          required: ['itens', 'total', 'pagina', 'tamanhoPagina'],
+          properties: {
+            itens: { type: 'array', items: { $ref: '#/components/schemas/CatalogoMultaResponse' } },
+            total: { type: 'integer', example: 1 },
+            pagina: { type: 'integer', example: 1 },
+            tamanhoPagina: { type: 'integer', example: 20 }
+          }
+        },
+        CatalogoMultaErrorResponse: {
+          type: 'object',
+          required: ['erro'],
+          properties: {
+            erro: {
+              type: 'object',
+              required: ['codigo', 'mensagem'],
+              properties: {
+                codigo: {
+                  type: 'string',
+                  enum: ['CATALOGO_MULTA_DADOS_INVALIDOS', 'CATALOGO_MULTA_NAO_ENCONTRADO', 'CATALOGO_MULTA_CONFLITO']
+                },
+                mensagem: { type: 'string' },
+                campo: { type: 'string' }
+              }
+            }
+          }
         }
       }
     },
