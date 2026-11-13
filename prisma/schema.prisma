@@ -37,6 +37,18 @@ model Cidadao {
   situacaoCnh               SituacaoCnh
   motivoSituacaoCnh         String?     @db.Text
   exerceAtividadeRemunerada Boolean
+  veiculos                  Veiculo[]
+}
+
+model Veiculo {
+  id             String  @id @default(uuid()) @db.Char(36)
+  placa          String  @unique @db.VarChar(7)
+  marca          String  @db.VarChar(100)
+  modelo         String  @db.VarChar(100)
+  ano            Int
+  cor            String  @db.VarChar(50)
+  proprietarioId String  @db.Char(36)
+  proprietario   Cidadao @relation(fields: [proprietarioId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 }
 
 model CatalogoMulta {
