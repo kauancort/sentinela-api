@@ -27,6 +27,19 @@ import {
 import { CatalogoMultaRepositoryPrisma } from './Infrastructure/Persistence/Prisma/CatalogoMultaRepositoryPrisma';
 import { CatalogoMultaController } from './Presentation/CatalogoMulta/CatalogoMultaController';
 import { criarCatalogoMultaRoutes } from './Presentation/CatalogoMulta/CatalogoMultaRoutes';
+import { AtualizarVeiculoHandler } from './Application/Veiculo/Handlers/AtualizarVeiculoHandler';
+import { BuscarVeiculoPorIdHandler } from './Application/Veiculo/Handlers/BuscarVeiculoPorIdHandler';
+import { CriarVeiculoHandler } from './Application/Veiculo/Handlers/CriarVeiculoHandler';
+import { ExcluirVeiculoHandler } from './Application/Veiculo/Handlers/ExcluirVeiculoHandler';
+import { ListarVeiculosHandler } from './Application/Veiculo/Handlers/ListarVeiculosHandler';
+import { TransferirPropriedadeVeiculoHandler } from './Application/Veiculo/Handlers/TransferirPropriedadeVeiculoHandler';
+import { VeiculoRepositoryPrisma } from './Infrastructure/Persistence/Prisma/VeiculoRepositoryPrisma';
+import { VeiculoController } from './Presentation/Veiculo/VeiculoController';
+import { criarVeiculoRoutes } from './Presentation/Veiculo/VeiculoRoutes';
+import {
+  ErroAplicacaoVeiculo,
+  ErroDadosVeiculoInvalidos
+} from './Application/Veiculo/VeiculoApplicationErrors';
 
 export const app = express();
 
@@ -60,6 +73,16 @@ const catalogoMultaController = new CatalogoMultaController(
   new ListarCatalogoMultasHandler(catalogoMultaRepository)
 );
 app.use('/catalogo-multas', criarCatalogoMultaRoutes(catalogoMultaController));
+const veiculoRepository = new VeiculoRepositoryPrisma(prisma);
+const veiculoController = new VeiculoController(
+  new CriarVeiculoHandler(veiculoRepository),
+  new AtualizarVeiculoHandler(veiculoRepository),
+  new ExcluirVeiculoHandler(veiculoRepository),
+  new BuscarVeiculoPorIdHandler(veiculoRepository),
+  new ListarVeiculosHandler(veiculoRepository),
+  new TransferirPropriedadeVeiculoHandler(veiculoRepository)
+);
+app.use('/veiculos', criarVeiculoRoutes(veiculoController));
 const tratarErro: ErrorRequestHandler = (erro, request, response, next) => {
   if (response.headersSent) return next(erro);
   if (erro instanceof SyntaxError && 'type' in erro && erro.type === 'entity.parse.failed') {
@@ -67,11 +90,26 @@ const tratarErro: ErrorRequestHandler = (erro, request, response, next) => {
       ? new ErroDadosCatalogoMultaInvalidos('body', 'O corpo deve conter JSON válido.')
       : new ErroDadosCidadaoInvalidos('body', 'O corpo deve conter JSON válido.');
   }
+  if (erro instanceof ErroDadosCidadaoInvalidos && request.originalUrl.startsWith('/veiculos')) {
+    erro = new ErroDadosVeiculoInvalidos('body', 'O corpo deve conter JSON valido.');
+  }
   if (erro instanceof ErroAplicacaoCatalogoMulta) {
     const status = {
       CATALOGO_MULTA_DADOS_INVALIDOS: 400,
       CATALOGO_MULTA_NAO_ENCONTRADO: 404,
       CATALOGO_MULTA_CONFLITO: 409
+    };
+    response.status(status[erro.codigo]).json({
+      erro: { codigo: erro.codigo, mensagem: erro.message, campo: erro.campo }
+    });
+    return;
+  }
+  if (erro instanceof ErroAplicacaoVeiculo) {
+    const status = {
+      VEICULO_DADOS_INVALIDOS: 400,
+      VEICULO_NAO_ENCONTRADO: 404,
+      VEICULO_PROPRIETARIO_NAO_ENCONTRADO: 404,
+      VEICULO_CONFLITO: 409
     };
     response.status(status[erro.codigo]).json({
       erro: { codigo: erro.codigo, mensagem: erro.message, campo: erro.campo }

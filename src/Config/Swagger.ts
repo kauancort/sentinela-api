@@ -128,6 +128,93 @@ export const swaggerSpec = swaggerJsdoc({
             }
           }
         },
+        VeiculoCreateRequest: {
+          type: 'object',
+          required: ['placa', 'marca', 'modelo', 'ano', 'cor', 'proprietarioId'],
+          properties: {
+            placa: {
+              type: 'string',
+              description: 'Placa brasileira com ou sem máscara; será normalizada.',
+              example: 'ABC-1234'
+            },
+            marca: { type: 'string', maxLength: 100, example: 'Toyota' },
+            modelo: { type: 'string', maxLength: 100, example: 'Corolla' },
+            ano: { type: 'integer', minimum: 1886, example: 2024 },
+            cor: { type: 'string', maxLength: 50, example: 'Prata' },
+            proprietarioId: {
+              type: 'string',
+              format: 'uuid',
+              example: '550e8400-e29b-41d4-a716-446655440000'
+            }
+          }
+        },
+        VeiculoUpdateRequest: {
+          type: 'object',
+          required: ['marca', 'modelo', 'ano', 'cor'],
+          properties: {
+            marca: { type: 'string', maxLength: 100, example: 'Toyota' },
+            modelo: { type: 'string', maxLength: 100, example: 'Corolla XEi' },
+            ano: { type: 'integer', minimum: 1886, example: 2024 },
+            cor: { type: 'string', maxLength: 50, example: 'Preto' }
+          }
+        },
+        VeiculoTransferenciaRequest: {
+          type: 'object',
+          required: ['novoProprietarioId'],
+          properties: {
+            novoProprietarioId: {
+              type: 'string',
+              format: 'uuid',
+              example: '9b2f22d6-2d63-4b35-8c00-1234567890ab'
+            }
+          }
+        },
+        VeiculoResponse: {
+          type: 'object',
+          required: ['id', 'placa', 'marca', 'modelo', 'ano', 'cor', 'proprietarioId'],
+          properties: {
+            id: { type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000' },
+            placa: { type: 'string', example: 'ABC1234' },
+            marca: { type: 'string', example: 'Toyota' },
+            modelo: { type: 'string', example: 'Corolla' },
+            ano: { type: 'integer', example: 2024 },
+            cor: { type: 'string', example: 'Prata' },
+            proprietarioId: { type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000' }
+          }
+        },
+        ListarVeiculosResponse: {
+          type: 'object',
+          required: ['itens', 'total', 'pagina', 'tamanhoPagina'],
+          properties: {
+            itens: { type: 'array', items: { $ref: '#/components/schemas/VeiculoResponse' } },
+            total: { type: 'integer', example: 1 },
+            pagina: { type: 'integer', example: 1 },
+            tamanhoPagina: { type: 'integer', example: 20 }
+          }
+        },
+        VeiculoErrorResponse: {
+          type: 'object',
+          required: ['erro'],
+          properties: {
+            erro: {
+              type: 'object',
+              required: ['codigo', 'mensagem'],
+              properties: {
+                codigo: {
+                  type: 'string',
+                  enum: [
+                    'VEICULO_DADOS_INVALIDOS',
+                    'VEICULO_NAO_ENCONTRADO',
+                    'VEICULO_PROPRIETARIO_NAO_ENCONTRADO',
+                    'VEICULO_CONFLITO'
+                  ]
+                },
+                mensagem: { type: 'string' },
+                campo: { type: 'string' }
+              }
+            }
+          }
+        },
         CatalogoMultaCreateRequest: {
           type: 'object',
           required: [
