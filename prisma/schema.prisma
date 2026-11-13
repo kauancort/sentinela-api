@@ -14,6 +14,18 @@ enum SituacaoCnh {
   CASSADA
 }
 
+enum GravidadeCatalogoMulta {
+  LEVE
+  MEDIA
+  GRAVE
+  GRAVISSIMA
+}
+
+enum ResponsabilidadeCatalogoMulta {
+  CONDUTOR
+  PROPRIETARIO
+}
+
 model Cidadao {
   id                        String      @id @default(uuid()) @db.Char(36)
   nome                      String      @db.VarChar(200)
@@ -25,4 +37,18 @@ model Cidadao {
   situacaoCnh               SituacaoCnh
   motivoSituacaoCnh         String?     @db.Text
   exerceAtividadeRemunerada Boolean
+}
+
+model CatalogoMulta {
+  id               String                           @id @default(uuid()) @db.Char(36)
+  codigo           String                           @unique @db.VarChar(32)
+  descricao        String                           @db.VarChar(500)
+  artigoCtb        String                           @db.VarChar(100)
+  gravidade        GravidadeCatalogoMulta
+  valorBase        Decimal                          @db.Decimal(10, 2)
+  multiplicador    Decimal                          @default(1) @db.Decimal(6, 2)
+  geraPontos       Boolean
+  autossuspensiva  Boolean
+  responsabilidade ResponsabilidadeCatalogoMulta
+  ativo             Boolean
 }
