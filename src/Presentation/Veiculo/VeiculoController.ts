@@ -14,7 +14,7 @@ export class VeiculoController {
     private readonly excluirVeiculo: ExcluirVeiculoHandler,
     private readonly buscarVeiculoPorId: BuscarVeiculoPorIdHandler,
     private readonly listarVeiculos: ListarVeiculosHandler,
-    private readonly transferirPropriedade: TransferirPropriedadeVeiculoHandler
+    private readonly transferirPropriedadeVeiculo: TransferirPropriedadeVeiculoHandler
   ) {}
 
   async criar(request: Request, response: Response): Promise<void> {
@@ -41,7 +41,7 @@ export class VeiculoController {
 
   async transferirPropriedade(request: Request, response: Response): Promise<void> {
     const id = request.params.id as string;
-    const veiculo = await this.transferirPropriedade.execute(id, request.body);
+    const veiculo = await this.transferirPropriedadeVeiculo.execute(id, request.body);
     response.status(200).json(veiculo);
   }
 
