@@ -47,11 +47,79 @@ import type { CameraTransitoController } from './CameraTransitoController';
  *         content:
  *           application/json:
  *             schema: { $ref: '#/components/schemas/CameraTransitoErrorResponse' }
+ * /camera-transito/procurarPorPlaca:
+ *   get:
+ *     summary: Busca veículo e proprietário atual pela placa
+ *     tags: [CameraTransito]
+ *     description: >-
+ *       Normaliza a placa como no cadastro de Veículo. Retorna somente id e nome do proprietário atual,
+ *       sem inferir condutor nem carregar histórico. Consulte /camera-transito/multas com filtro placa para ver as multas.
+ *     parameters:
+ *       - in: query
+ *         name: placa
+ *         required: true
+ *         description: Placa antiga ou Mercosul; aceita minúsculas, espaços e hífen para normalização.
+ *         schema: { type: string, example: ABC-1234 }
+ *     responses:
+ *       '200':
+ *         description: Veículo e dados básicos do proprietário atual
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/ProcurarPorPlacaResponse' }
+ *       '400':
+ *         description: Placa ausente, inválida, repetida ou parâmetro desconhecido
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/CameraTransitoErrorResponse' }
+ *       '404':
+ *         description: Veículo ou proprietário não encontrado
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/CameraTransitoErrorResponse' }
+ * /camera-transito/multas:
+ *   get:
+ *     summary: Lista multas com paginação e filtros combinados
+ *     tags: [CameraTransito]
+ *     description: >-
+ *       Filtros exatos combinados por E. Inclui canceladas por padrão. Placa e código da câmera são normalizados.
+ *       Datas reais ISO 8601 com fuso e até milissegundos; intervalo inclusivo, sem exigir ambas as datas.
+ *       Ordem por data da ocorrência decrescente e ID crescente para desempate.
+ *       Retorna snapshots, status e motivo de cancelamento, sem recalcular valores pelo catálogo atual ou projetar pontuação.
+ *       Página e deslocamento (pagina menos 1 vezes tamanhoPagina) devem ser inteiros seguros.
+ *     parameters:
+ *       - { in: query, name: pagina, schema: { type: integer, minimum: 1, maximum: 9007199254740991, default: 1 } }
+ *       - { in: query, name: tamanhoPagina, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+ *       - { in: query, name: placa, schema: { type: string, example: ABC1D23 } }
+ *       - { in: query, name: codigoCamera, schema: { type: string, minLength: 1, maxLength: 50, example: CAM-001 } }
+ *       - { in: query, name: catalogoMultaId, schema: { type: string, format: uuid } }
+ *       - { in: query, name: condutorId, schema: { type: string, format: uuid } }
+ *       - { in: query, name: responsavelId, schema: { type: string, format: uuid } }
+ *       - { in: query, name: status, schema: { type: string, enum: [REGISTRADA, AGUARDANDO_IDENTIFICACAO, CANCELADA] } }
+ *       - { in: query, name: gravidade, schema: { type: string, enum: [LEVE, MEDIA, GRAVE, GRAVISSIMA] } }
+ *       - { in: query, name: dataInicial, description: 'Início inclusivo; ano entre 1000 e 9999.', schema: { type: string, format: date-time, example: '2026-11-01T00:00:00-03:00' } }
+ *       - { in: query, name: dataFinal, description: 'Fim inclusivo; igual ou posterior ao início.', schema: { type: string, format: date-time, example: '2026-11-13T23:59:59.999-03:00' } }
+ *     responses:
+ *       '200':
+ *         description: Página de multas, incluindo página vazia e total filtrado
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/ListarMultasResponse' }
+ *       '400':
+ *         description: Paginação ou deslocamento inválido, filtro inválido, repetido ou desconhecido, data sem fuso ou intervalo invertido
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/CameraTransitoErrorResponse' }
  */
 export function criarCameraTransitoRoutes(controller: CameraTransitoController): Router {
   const router = Router();
   router.post('/multar', (request, response, next) => {
     controller.multar(request, response).catch(next);
+  });
+  router.get('/procurarPorPlaca', (request, response, next) => {
+    controller.procurarPorPlaca(request, response).catch(next);
+  });
+  router.get('/multas', (request, response, next) => {
+    controller.listarMultas(request, response).catch(next);
   });
   return router;
 }

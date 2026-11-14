@@ -6,6 +6,8 @@ import swaggerUi from 'swagger-ui-express';
 
 import { swaggerSpec } from './Config/Swagger';
 import { MultarHandler } from './Application/CameraTransito/Handlers/MultarHandler';
+import { ProcurarPorPlacaHandler } from './Application/CameraTransito/Handlers/ProcurarPorPlacaHandler';
+import { ListarMultasHandler } from './Application/CameraTransito/Handlers/ListarMultasHandler';
 import { ErroAplicacaoCameraTransito, ErroDadosCameraTransitoInvalidos } from './Application/CameraTransito/CameraTransitoApplicationErrors';
 import { CameraTransitoRepositoryPrisma } from './Infrastructure/Persistence/Prisma/CameraTransitoRepositoryPrisma';
 import { CameraTransitoController } from './Presentation/CameraTransito/CameraTransitoController';
@@ -88,8 +90,11 @@ const veiculoController = new VeiculoController(
   new TransferirPropriedadeVeiculoHandler(veiculoRepository)
 );
 app.use('/veiculos', criarVeiculoRoutes(veiculoController));
+const cameraTransitoRepository = new CameraTransitoRepositoryPrisma(prisma);
 const cameraTransitoController = new CameraTransitoController(
-  new MultarHandler(new CameraTransitoRepositoryPrisma(prisma), veiculoRepository, catalogoMultaRepository, cidadaoRepository)
+  new MultarHandler(cameraTransitoRepository, veiculoRepository, catalogoMultaRepository, cidadaoRepository),
+  new ProcurarPorPlacaHandler(veiculoRepository, cidadaoRepository),
+  new ListarMultasHandler(cameraTransitoRepository)
 );
 app.use('/camera-transito', criarCameraTransitoRoutes(cameraTransitoController));
 const tratarErro: ErrorRequestHandler = (erro, request, response, next) => {

@@ -16,6 +16,32 @@ export const swaggerSpec = swaggerJsdoc({
     servers: [{ url: 'http://localhost:3000', description: 'Servidor local' }],
     components: {
       schemas: {
+        ProcurarPorPlacaResponse: {
+          type: 'object',
+          required: ['veiculo', 'proprietario'],
+          properties: {
+            veiculo: { $ref: '#/components/schemas/VeiculoResponse' },
+            proprietario: {
+              type: 'object', required: ['id', 'nome'], additionalProperties: false,
+              description: 'Proprietário atual, sem inferir condutor ou expor documentos pessoais.',
+              properties: {
+                id: { type: 'string', format: 'uuid' },
+                nome: { type: 'string', example: 'Ana Exemplo' }
+              }
+            }
+          }
+        },
+        ListarMultasResponse: {
+          type: 'object',
+          required: ['itens', 'total', 'pagina', 'tamanhoPagina'],
+          properties: {
+            itens: { type: 'array', items: { $ref: '#/components/schemas/MultaResponse' } },
+            total: { type: 'integer', minimum: 0, description: 'Contagem com os mesmos filtros dos itens.' },
+            pagina: { type: 'integer', minimum: 1 },
+            tamanhoPagina: { type: 'integer', minimum: 1, maximum: 100 }
+          },
+          example: { itens: [], total: 0, pagina: 1, tamanhoPagina: 20 }
+        },
         MultarRequest: {
           type: 'object',
           additionalProperties: false,
