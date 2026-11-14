@@ -5,6 +5,11 @@ import morgan from 'morgan';
 import swaggerUi from 'swagger-ui-express';
 
 import { swaggerSpec } from './Config/Swagger';
+import { MultarHandler } from './Application/CameraTransito/Handlers/MultarHandler';
+import { ErroAplicacaoCameraTransito, ErroDadosCameraTransitoInvalidos } from './Application/CameraTransito/CameraTransitoApplicationErrors';
+import { CameraTransitoRepositoryPrisma } from './Infrastructure/Persistence/Prisma/CameraTransitoRepositoryPrisma';
+import { CameraTransitoController } from './Presentation/CameraTransito/CameraTransitoController';
+import { criarCameraTransitoRoutes } from './Presentation/CameraTransito/CameraTransitoRoutes';
 import { AtualizarCidadaoHandler } from './Application/Cidadao/Handlers/AtualizarCidadaoHandler';
 import { BuscarCidadaoPorIdHandler } from './Application/Cidadao/Handlers/BuscarCidadaoPorIdHandler';
 import { CriarCidadaoHandler } from './Application/Cidadao/Handlers/CriarCidadaoHandler';
@@ -83,15 +88,33 @@ const veiculoController = new VeiculoController(
   new TransferirPropriedadeVeiculoHandler(veiculoRepository)
 );
 app.use('/veiculos', criarVeiculoRoutes(veiculoController));
+const cameraTransitoController = new CameraTransitoController(
+  new MultarHandler(new CameraTransitoRepositoryPrisma(prisma), veiculoRepository, catalogoMultaRepository, cidadaoRepository)
+);
+app.use('/camera-transito', criarCameraTransitoRoutes(cameraTransitoController));
 const tratarErro: ErrorRequestHandler = (erro, request, response, next) => {
   if (response.headersSent) return next(erro);
   if (erro instanceof SyntaxError && 'type' in erro && erro.type === 'entity.parse.failed') {
-    erro = request.originalUrl.startsWith('/catalogo-multas')
+    erro = request.originalUrl.startsWith('/camera-transito')
+      ? new ErroDadosCameraTransitoInvalidos('body', 'O corpo deve conter JSON válido.')
+      : request.originalUrl.startsWith('/catalogo-multas')
       ? new ErroDadosCatalogoMultaInvalidos('body', 'O corpo deve conter JSON válido.')
       : new ErroDadosCidadaoInvalidos('body', 'O corpo deve conter JSON válido.');
   }
   if (erro instanceof ErroDadosCidadaoInvalidos && request.originalUrl.startsWith('/veiculos')) {
     erro = new ErroDadosVeiculoInvalidos('body', 'O corpo deve conter JSON valido.');
+  }
+  if (erro instanceof ErroAplicacaoCameraTransito) {
+    const status = {
+      CAMERA_TRANSITO_DADOS_INVALIDOS: 400,
+      CAMERA_TRANSITO_NAO_ENCONTRADO: 404,
+      CAMERA_TRANSITO_OCORRENCIA_DUPLICADA: 409,
+      CAMERA_TRANSITO_CONFLITO: 409
+    };
+    response.status(status[erro.codigo]).json({
+      erro: { codigo: erro.codigo, mensagem: erro.message, campo: erro.campo }
+    });
+    return;
   }
   if (erro instanceof ErroAplicacaoCatalogoMulta) {
     const status = {

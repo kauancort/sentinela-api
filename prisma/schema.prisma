@@ -26,6 +26,12 @@ enum ResponsabilidadeCatalogoMulta {
   PROPRIETARIO
 }
 
+enum StatusMulta {
+  REGISTRADA
+  AGUARDANDO_IDENTIFICACAO
+  CANCELADA
+}
+
 model Cidadao {
   id                        String      @id @default(uuid()) @db.Char(36)
   nome                      String      @db.VarChar(200)
@@ -38,6 +44,9 @@ model Cidadao {
   motivoSituacaoCnh         String?     @db.Text
   exerceAtividadeRemunerada Boolean
   veiculos                  Veiculo[]
+  multasComoProprietario    Multa[]     @relation("MultaProprietarioHistorico")
+  multasComoCondutor        Multa[]     @relation("MultaCondutor")
+  multasComoResponsavel     Multa[]     @relation("MultaResponsavel")
 }
 
 model Veiculo {
@@ -49,18 +58,58 @@ model Veiculo {
   cor            String  @db.VarChar(50)
   proprietarioId String  @db.Char(36)
   proprietario   Cidadao @relation(fields: [proprietarioId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  multas         Multa[] @relation("MultaVeiculo")
 }
 
 model CatalogoMulta {
-  id               String                           @id @default(uuid()) @db.Char(36)
-  codigo           String                           @unique @db.VarChar(32)
-  descricao        String                           @db.VarChar(500)
-  artigoCtb        String                           @db.VarChar(100)
+  id               String                        @id @default(uuid()) @db.Char(36)
+  codigo           String                        @unique @db.VarChar(32)
+  descricao        String                        @db.VarChar(500)
+  artigoCtb        String                        @db.VarChar(100)
   gravidade        GravidadeCatalogoMulta
-  valorBase        Decimal                          @db.Decimal(10, 2)
-  multiplicador    Decimal                          @default(1) @db.Decimal(6, 2)
+  valorBase        Decimal                       @db.Decimal(10, 2)
+  multiplicador    Decimal                       @default(1) @db.Decimal(6, 2)
   geraPontos       Boolean
   autossuspensiva  Boolean
   responsabilidade ResponsabilidadeCatalogoMulta
-  ativo             Boolean
+  ativo            Boolean
+  multas           Multa[]                       @relation("MultaCatalogo")
+}
+
+model Multa {
+  id                         String                        @id @default(uuid()) @db.Char(36)
+  ocorrenciaId               String                        @unique @db.Char(36)
+  codigoCamera               String                        @db.VarChar(50)
+  placaCapturada             String                        @db.VarChar(7)
+  veiculoId                  String                        @db.Char(36)
+  proprietarioIdNaOcorrencia String                        @db.Char(36)
+  condutorId                 String?                       @db.Char(36)
+  responsavelId              String?                       @db.Char(36)
+  catalogoMultaId            String                        @db.Char(36)
+  codigoInfracaoAplicado     String                        @db.VarChar(32)
+  descricaoInfracaoAplicada  String                        @db.VarChar(500)
+  artigoCtbAplicado          String                        @db.VarChar(100)
+  gravidadeAplicada          GravidadeCatalogoMulta
+  responsabilidadeAplicada   ResponsabilidadeCatalogoMulta
+  valorAplicado              Decimal                       @db.Decimal(14, 2)
+  pontosAplicaveis           Int
+  autossuspensiva            Boolean
+  dataHoraOcorrencia         DateTime                      @db.DateTime(3)
+  local                      String                        @db.VarChar(200)
+  status                     StatusMulta
+  motivoCancelamento         String?                       @db.VarChar(100)
+
+  veiculo                  Veiculo       @relation("MultaVeiculo", fields: [veiculoId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  proprietarioNaOcorrencia Cidadao       @relation("MultaProprietarioHistorico", fields: [proprietarioIdNaOcorrencia], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  condutor                 Cidadao?      @relation("MultaCondutor", fields: [condutorId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  responsavel              Cidadao?      @relation("MultaResponsavel", fields: [responsavelId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  catalogoMulta            CatalogoMulta @relation("MultaCatalogo", fields: [catalogoMultaId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@index([responsavelId, dataHoraOcorrencia])
+  @@index([placaCapturada, dataHoraOcorrencia])
+  @@index([status, dataHoraOcorrencia])
+  @@index([veiculoId])
+  @@index([proprietarioIdNaOcorrencia])
+  @@index([condutorId])
+  @@index([catalogoMultaId])
 }
