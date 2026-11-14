@@ -19,6 +19,14 @@ export const swaggerSpec = swaggerJsdoc({
         ProcurarPorPlacaResponse: {
           type: 'object',
           required: ['veiculo', 'proprietario'],
+          example: {
+            veiculo: {
+              id: '550e8400-e29b-41d4-a716-446655440002', placa: 'ABC1D23',
+              marca: 'Marca Exemplo', modelo: 'Modelo Exemplo', ano: 2020, cor: 'Prata',
+              proprietarioId: '550e8400-e29b-41d4-a716-446655440003'
+            },
+            proprietario: { id: '550e8400-e29b-41d4-a716-446655440003', nome: 'Ana Exemplo' }
+          },
           properties: {
             veiculo: { $ref: '#/components/schemas/VeiculoResponse' },
             proprietario: {

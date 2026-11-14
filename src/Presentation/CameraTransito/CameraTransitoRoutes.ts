@@ -109,6 +109,36 @@ import type { CameraTransitoController } from './CameraTransitoController';
  *         content:
  *           application/json:
  *             schema: { $ref: '#/components/schemas/CameraTransitoErrorResponse' }
+ * /camera-transito/multas/{id}:
+ *   delete:
+ *     summary: Cancela logicamente uma multa por erro de fiscalização
+ *     tags: [CameraTransito]
+ *     description: >-
+ *       Não recebe body. Mantém a multa e seus snapshots no histórico, altera o status para CANCELADA
+ *       e grava o motivo fixo "Cancelamento por erro de fiscalização.".
+ *       Primeira chamada e repetições, inclusive concorrentes, retornam 204 sem corpo.
+ *       A multa deixa de contribuir para pontos e gravíssimas nas próximas análises.
+ *       Não altera CNH, respostas de análises anteriores ou vínculos que impedem excluir os cadastros relacionados.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string, format: uuid, example: '550e8400-e29b-41d4-a716-446655440001' }
+ *     responses:
+ *       '204':
+ *         description: Multa cancelada ou já cancelada; resposta sem corpo
+ *       '400':
+ *         description: UUID inválido
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/CameraTransitoErrorResponse' }
+ *             example: { erro: { codigo: CAMERA_TRANSITO_DADOS_INVALIDOS, mensagem: 'id deve ser um UUID válido.', campo: id } }
+ *       '404':
+ *         description: Multa inexistente
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/CameraTransitoErrorResponse' }
+ *             example: { erro: { codigo: CAMERA_TRANSITO_NAO_ENCONTRADO, mensagem: 'Multa com ID 550e8400-e29b-41d4-a716-446655440001 não foi encontrada.', campo: id } }
  */
 export function criarCameraTransitoRoutes(controller: CameraTransitoController): Router {
   const router = Router();
@@ -120,6 +150,9 @@ export function criarCameraTransitoRoutes(controller: CameraTransitoController):
   });
   router.get('/multas', (request, response, next) => {
     controller.listarMultas(request, response).catch(next);
+  });
+  router.delete('/multas/:id', (request, response, next) => {
+    controller.cancelarMulta(request, response).catch(next);
   });
   return router;
 }

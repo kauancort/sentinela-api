@@ -1,6 +1,6 @@
 import {
   ErroCatalogoMultaInativo, ErroConflitoMulta, ErroDadosMultaInvalidos,
-  ErroOcorrenciaDuplicada, ErroVinculoCameraTransito
+  ErroMultaNaoEncontrada, ErroOcorrenciaDuplicada, ErroVinculoCameraTransito
 } from '../../Domain/CameraTransito/CameraTransitoErrors';
 
 export type CodigoErroCameraTransito = 'CAMERA_TRANSITO_DADOS_INVALIDOS' | 'CAMERA_TRANSITO_NAO_ENCONTRADO'
@@ -27,6 +27,7 @@ export class ErroRegistroCameraTransitoNaoEncontrado extends ErroAplicacaoCamera
 
 export function propagarErroCameraTransito(erro: unknown): never {
   if (erro instanceof ErroDadosMultaInvalidos) throw new ErroDadosCameraTransitoInvalidos(erro.campo, erro.message);
+  if (erro instanceof ErroMultaNaoEncontrada) throw new ErroRegistroCameraTransitoNaoEncontrado('id', erro.message);
   if (erro instanceof ErroOcorrenciaDuplicada) {
     throw new ErroAplicacaoCameraTransito('CAMERA_TRANSITO_OCORRENCIA_DUPLICADA', erro.message, erro.campo);
   }

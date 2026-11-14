@@ -8,6 +8,7 @@ import { swaggerSpec } from './Config/Swagger';
 import { MultarHandler } from './Application/CameraTransito/Handlers/MultarHandler';
 import { ProcurarPorPlacaHandler } from './Application/CameraTransito/Handlers/ProcurarPorPlacaHandler';
 import { ListarMultasHandler } from './Application/CameraTransito/Handlers/ListarMultasHandler';
+import { CancelarMultaHandler } from './Application/CameraTransito/Handlers/CancelarMultaHandler';
 import { ErroAplicacaoCameraTransito, ErroDadosCameraTransitoInvalidos } from './Application/CameraTransito/CameraTransitoApplicationErrors';
 import { CameraTransitoRepositoryPrisma } from './Infrastructure/Persistence/Prisma/CameraTransitoRepositoryPrisma';
 import { CameraTransitoController } from './Presentation/CameraTransito/CameraTransitoController';
@@ -94,7 +95,8 @@ const cameraTransitoRepository = new CameraTransitoRepositoryPrisma(prisma);
 const cameraTransitoController = new CameraTransitoController(
   new MultarHandler(cameraTransitoRepository, veiculoRepository, catalogoMultaRepository, cidadaoRepository),
   new ProcurarPorPlacaHandler(veiculoRepository, cidadaoRepository),
-  new ListarMultasHandler(cameraTransitoRepository)
+  new ListarMultasHandler(cameraTransitoRepository),
+  new CancelarMultaHandler(cameraTransitoRepository)
 );
 app.use('/camera-transito', criarCameraTransitoRoutes(cameraTransitoController));
 const tratarErro: ErrorRequestHandler = (erro, request, response, next) => {
