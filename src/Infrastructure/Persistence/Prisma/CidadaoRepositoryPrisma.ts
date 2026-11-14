@@ -46,7 +46,9 @@ function paraSituacaoDominio(situacao: SituacaoCnhPrisma): SituacaoCnh {
 
 function dataSemHorario(data: Date | null): Date | null {
   if (data === null) return null;
-  return new Date(Date.UTC(data.getUTCFullYear(), data.getUTCMonth(), data.getUTCDate()));
+  const resultado = new Date(data);
+  resultado.setUTCHours(0, 0, 0, 0);
+  return resultado;
 }
 
 function mapearCidadao(registro: Prisma.CidadaoGetPayload<Record<string, never>>): Cidadao {

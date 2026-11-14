@@ -25,7 +25,7 @@ function mapearVeiculo(registro: RegistroVeiculo): Veiculo {
     modelo: registro.modelo,
     ano: registro.ano,
     cor: registro.cor,
-    proprietarioId: registro.proprietarioId
+    proprietarioId: registro.proprietarioId.toLowerCase()
   }, registro.id);
 }
 

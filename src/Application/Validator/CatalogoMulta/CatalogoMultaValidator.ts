@@ -35,7 +35,7 @@ export function validarObjetoCatalogoMulta(
 export function validarIdCatalogoMulta(id: unknown): string {
   const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   if (typeof id !== 'string' || !uuid.test(id)) erro('id', 'O ID deve ser um UUID válido.');
-  return id;
+  return id.toLowerCase();
 }
 
 function texto(valor: unknown, campo: string, limite: number): string {
@@ -50,7 +50,7 @@ function decimal(valor: unknown, campo: string, maximo: number): number {
     erro(campo, `${campo} deve ser um número maior que zero.`);
   }
   if (valor > maximo) erro(campo, `${campo} excede o valor máximo permitido.`);
-  if (Math.abs(Math.round(valor * 100) - valor * 100) > 1e-9) {
+  if (Math.round(valor * 100) / 100 !== valor) {
     erro(campo, `${campo} deve ter no máximo duas casas decimais.`);
   }
   return valor;

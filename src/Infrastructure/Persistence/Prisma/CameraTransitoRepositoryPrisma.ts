@@ -24,9 +24,10 @@ function mapearMulta(registro: Prisma.MultaGetPayload<Record<string, never>>): M
     codigoCamera: registro.codigoCamera,
     placaCapturada: registro.placaCapturada,
     veiculoId: registro.veiculoId,
-    proprietarioIdNaOcorrencia: registro.proprietarioIdNaOcorrencia,
-    condutorId: registro.condutorId,
-    responsavelId: registro.responsavelId,
+    // Normaliza também vínculos gravados antes da normalização dos UUIDs na entrada.
+    proprietarioIdNaOcorrencia: registro.proprietarioIdNaOcorrencia.toLowerCase(),
+    condutorId: registro.condutorId?.toLowerCase() ?? null,
+    responsavelId: registro.responsavelId?.toLowerCase() ?? null,
     catalogoMultaId: registro.catalogoMultaId,
     codigoInfracaoAplicado: registro.codigoInfracaoAplicado,
     descricaoInfracaoAplicada: registro.descricaoInfracaoAplicada,

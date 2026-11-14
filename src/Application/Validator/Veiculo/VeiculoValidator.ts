@@ -48,7 +48,7 @@ export function validarId(id: unknown, campo = 'id'): string {
   if (typeof id !== 'string' || !uuid.test(id)) {
     erro(campo, 'O ID deve ser um UUID válido.');
   }
-  return id;
+  return id.toLowerCase();
 }
 
 export function texto(valor: unknown, campo: string): string {
