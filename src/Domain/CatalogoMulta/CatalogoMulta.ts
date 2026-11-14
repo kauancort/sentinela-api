@@ -52,7 +52,11 @@ export class CatalogoMulta {
   }
 
   calcularValor(): number {
-    return Number((this.valorBase * this.multiplicador).toFixed(2));
+    const valorCentavos = BigInt(Math.round(this.valorBase * 100));
+    const multiplicadorCentesimos = BigInt(Math.round(this.multiplicador * 100));
+    // O produto pode ultrapassar Number.MAX_SAFE_INTEGER; arredondamos meio para cima.
+    const totalCentavos = (valorCentavos * multiplicadorCentesimos + 50n) / 100n;
+    return Number(totalCentavos) / 100;
   }
 
   obterPontosAplicaveis(): number {

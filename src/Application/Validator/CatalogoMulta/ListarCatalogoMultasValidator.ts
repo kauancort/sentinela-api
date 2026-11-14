@@ -27,9 +27,14 @@ export function validarListarCatalogoMultas(input: unknown): PaginacaoCatalogoMu
   if (responsabilidade !== undefined && !Object.values(ResponsabilidadeCatalogoMulta).includes(responsabilidade)) {
     throw new ErroDadosCatalogoMultaInvalidos('responsabilidade', 'responsabilidade não é válida.');
   }
+  const pagina = validarInteiroConsulta(dados.pagina, 'pagina', 1);
+  const limite = validarInteiroConsulta(dados.tamanhoPagina, 'tamanhoPagina', 20, 100);
+  if (!Number.isSafeInteger((pagina - 1) * limite)) {
+    throw new ErroDadosCatalogoMultaInvalidos('pagina', 'A página excede o intervalo permitido.');
+  }
   return {
-    pagina: validarInteiroConsulta(dados.pagina, 'pagina', 1),
-    limite: validarInteiroConsulta(dados.tamanhoPagina, 'tamanhoPagina', 20, 100),
+    pagina,
+    limite,
     filtros: {
       codigo: textoOpcional(dados.codigo, 'codigo')?.toUpperCase(),
       descricao: textoOpcional(dados.descricao, 'descricao'),

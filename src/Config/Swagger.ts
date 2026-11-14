@@ -248,7 +248,10 @@ export const swaggerSpec = swaggerJsdoc({
               required: ['id', 'valorCalculado', 'pontosAplicaveis'],
               properties: {
                 id: { type: 'string', format: 'uuid' },
-                valorCalculado: { type: 'number', format: 'double', readOnly: true, example: 880.41 },
+                valorCalculado: {
+                  type: 'number', format: 'double', readOnly: true, example: 880.41,
+                  description: 'Valor base × multiplicador, arredondado para duas casas decimais; meio centavo arredonda para cima.'
+                },
                 pontosAplicaveis: { type: 'integer', readOnly: true, example: 7 }
               }
             }
