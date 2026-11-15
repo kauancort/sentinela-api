@@ -1,6 +1,24 @@
-# P2 Backend
+# Sentinela API
 
-API em TypeScript e Express, com MySQL, Prisma e Swagger. O Docker Compose pode executar a API e o banco juntos.
+Projeto acadêmico de gestão de infrações de trânsito, desenvolvido por **Kauan Cortiço, Gabriel Barella, Wesley Servelin e Weslley Katsube**.
+
+O escopo desta versão está concluído: CRUDs de Cidadão, Veículo e Catálogo de Multas, transferência de propriedade, aplicação de multas com análise de pontuação, consultas e cancelamento lógico. A API é o produto desta entrega; a interface para explorar as requisições é o Swagger.
+
+## Tecnologias e arquitetura
+
+Node.js 22, TypeScript, Express 5, Prisma 6, MySQL 8.4, Docker Compose e Swagger/OpenAPI.
+
+```text
+src/
+  Presentation/     Rotas HTTP e controllers.
+  Application/      Handlers, DTOs, mappers e validators por caso de uso.
+  Domain/           Entidades, regras de negócio, erros e contratos de repositório.
+  Infrastructure/   Repositórios Prisma e conexão com o banco.
+  Config/           Configuração do Swagger.
+  App.ts            Composição de dependências, middlewares e adaptação de erros HTTP.
+```
+
+Os controllers delegam aos handlers, que validam a entrada e coordenam os casos de uso usando contratos do domínio. A Infrastructure implementa esses contratos com Prisma. O domínio não depende de Express ou Prisma. O Docker Compose executa a API e o MySQL juntos.
 
 ## Requisitos
 
@@ -87,7 +105,186 @@ A listagem aceita `pagina`, `tamanhoPagina`, `placa`, `codigoCamera`, `catalogoM
 
 O DELETE mantém o histórico e grava `Cancelamento por erro de fiscalização.`. A multa cancelada deixa de contribuir para os pontos e a quantidade de gravíssimas nas próximas análises. Respostas de análises já entregues não são recalculadas.
 
-### Limites desta versão
+### CRUDs disponíveis
+
+| Módulo | Rotas |
+| --- | --- |
+| Cidadão | `POST /cidadaos`, `GET /cidadaos`, `GET /cidadaos/:id`, `PUT /cidadaos/:id`, `DELETE /cidadaos/:id` |
+| Veículo | `POST /veiculos`, `GET /veiculos`, `GET /veiculos/:id`, `PUT /veiculos/:id`, `DELETE /veiculos/:id` |
+| Transferência | `PATCH /veiculos/:id/proprietario` |
+| Catálogo de Multas | `POST /catalogo-multas`, `GET /catalogo-multas`, `GET /catalogo-multas/:id`, `PUT /catalogo-multas/:id`, `DELETE /catalogo-multas/:id` |
+
+As listagens usam `pagina` e `tamanhoPagina`, com padrão 1/20 e máximo 100. Filtros e corpos completos estão no Swagger. O PUT substitui os dados editáveis; no Veículo, ele recebe somente marca, modelo, ano e cor. A troca de proprietário usa o PATCH separado.
+
+## Exemplos de requisição
+
+Execute os exemplos em Bash, pelo WSL ou Linux, ou use os mesmos corpos no Swagger. Substitua os valores entre `<...>` pelos IDs retornados nas etapas anteriores. Os dados são fictícios; em um banco já utilizado, escolha CPF, CNH, placa e código de catálogo ainda disponíveis.
+
+### 1. Cadastrar proprietário e condutor
+
+O proprietário pode não possuir CNH. Isso não o transforma no condutor da ocorrência.
+
+```sh
+curl -i -X POST http://localhost:3000/cidadaos \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "nome": "Ana Exemplo",
+    "cpf": "529.982.247-25",
+    "email": "ana@example.com",
+    "possuiCnh": false
+  }'
+```
+
+Guarde o `id` como `<PROPRIETARIO_ID>`. Agora cadastre o condutor:
+
+```sh
+curl -i -X POST http://localhost:3000/cidadaos \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "nome": "Bruno Exemplo",
+    "cpf": "111.444.777-35",
+    "email": "bruno@example.com",
+    "possuiCnh": true,
+    "cnhNumero": "00012345678",
+    "cnhValidade": "2035-12-31",
+    "situacaoCnh": "REGULAR",
+    "motivoSituacaoCnh": null,
+    "exerceAtividadeRemunerada": false
+  }'
+```
+
+Guarde o `id` como `<CONDUTOR_ID>`. Ambos retornam 201. CPF pode vir com máscara, mas é validado e salvo com 11 dígitos. Número de CNH é texto, preservando zeros iniciais.
+
+### 2. Cadastrar o veículo
+
+```sh
+curl -i -X POST http://localhost:3000/veiculos \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "placa": "ABC1D23",
+    "marca": "Marca Exemplo",
+    "modelo": "Modelo Exemplo",
+    "ano": 2020,
+    "cor": "Prata",
+    "proprietarioId": "<PROPRIETARIO_ID>"
+  }'
+```
+
+Retorna 201. Guarde o `id` como `<VEICULO_ID>`.
+
+### 3. Cadastrar um tipo de infração
+
+Descrição, referência e valor abaixo são apenas dados de demonstração.
+
+```sh
+curl -i -X POST http://localhost:3000/catalogo-multas \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "codigo": "DEMO-001",
+    "descricao": "Infração fictícia para demonstração",
+    "artigoCtb": "Referência fictícia",
+    "gravidade": "GRAVISSIMA",
+    "valorBase": 293.47,
+    "multiplicador": 1,
+    "geraPontos": true,
+    "autossuspensiva": false,
+    "responsabilidade": "CONDUTOR",
+    "ativo": true
+  }'
+```
+
+Retorna 201. Guarde o `id` como `<CATALOGO_MULTA_ID>`. O catálogo calcula o valor em centavos; multiplicador afeta dinheiro, não pontos.
+
+### 4. Aplicar uma multa: endpoint complexo
+
+```sh
+curl -i -X POST http://localhost:3000/camera-transito/multar \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "ocorrenciaId": "f8fdb891-12aa-4d12-aecb-85198bedca01",
+    "codigoCamera": "CAM-001",
+    "placa": "ABC1D23",
+    "catalogoMultaId": "<CATALOGO_MULTA_ID>",
+    "condutorId": "<CONDUTOR_ID>",
+    "dataHoraOcorrencia": "2026-11-12T12:00:00-03:00",
+    "local": "Avenida Exemplo, 100"
+  }'
+```
+
+Retorna 201 com `{ multa, analise, pendencias }`. Guarde `multa.id` como `<MULTA_ID>`. Data da ocorrência precisa ser real, ter fuso e não estar no futuro. Não envie valor ou pontos: eles vêm do catálogo.
+
+Para este condutor sem histórico anterior, a projeção será de 7 pontos, uma gravíssima computável, limite 30 e `atingiuLimite=false`. O responsável é o condutor informado, mesmo sendo diferente do proprietário.
+
+Repetir exatamente a ocorrência retorna 409 com `CAMERA_TRANSITO_OCORRENCIA_DUPLICADA`. Para uma captura diferente, gere outro `ocorrenciaId`. Para demonstrar identificação pendente, use uma nova ocorrência com `condutorId: null`: neste catálogo, a multa fica `AGUARDANDO_IDENTIFICACAO` e os campos numéricos da análise ficam nulos, com motivo explícito.
+
+### 5. Consultar veículo e histórico
+
+```sh
+curl --get http://localhost:3000/camera-transito/procurarPorPlaca \
+  --data-urlencode 'placa=abc-1d23'
+```
+
+```sh
+curl --get http://localhost:3000/camera-transito/multas \
+  --data-urlencode 'placa=ABC1D23' \
+  --data-urlencode 'codigoCamera=CAM-001' \
+  --data-urlencode 'pagina=1' \
+  --data-urlencode 'tamanhoPagina=20'
+```
+
+Ambos retornam 200. A busca mostra o proprietário atual; a listagem mostra os snapshots de cada aplicação, incluindo canceladas.
+
+### 6. Atualizar o cidadão e transferir o veículo
+
+O PUT exige todos os campos editáveis. Manter CPF e CNH do próprio cidadão funciona:
+
+```sh
+curl -i -X PUT 'http://localhost:3000/cidadaos/<CONDUTOR_ID>' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "nome": "Bruno Exemplo Atualizado",
+    "cpf": "11144477735",
+    "email": "bruno@example.com",
+    "possuiCnh": true,
+    "cnhNumero": "00012345678",
+    "cnhValidade": "2035-12-31",
+    "situacaoCnh": "REGULAR",
+    "motivoSituacaoCnh": null,
+    "exerceAtividadeRemunerada": false
+  }'
+```
+
+Neste exemplo, Bruno também passa a ser proprietário do veículo:
+
+```sh
+curl -i -X PATCH 'http://localhost:3000/veiculos/<VEICULO_ID>/proprietario' \
+  -H 'Content-Type: application/json' \
+  -d '{ "novoProprietarioId": "<CONDUTOR_ID>" }'
+```
+
+Ambos retornam 200. Consultar a placa agora mostra Bruno; a multa já registrada mantém o ID de Ana como proprietário histórico.
+
+### 7. Cancelar e conferir a preservação do histórico
+
+```sh
+curl -i -X DELETE 'http://localhost:3000/camera-transito/multas/<MULTA_ID>'
+```
+
+Retorna 204 sem corpo, inclusive ao repetir. Consulte as canceladas:
+
+```sh
+curl --get http://localhost:3000/camera-transito/multas \
+  --data-urlencode 'placa=ABC1D23' \
+  --data-urlencode 'status=CANCELADA'
+```
+
+O registro permanece com status e motivo de cancelamento. Nas próximas análises, deixa de contribuir para os pontos e para a contagem de gravíssimas. Excluir o catálogo ainda vinculado retorna 409:
+
+```sh
+curl -i -X DELETE 'http://localhost:3000/catalogo-multas/<CATALOGO_MULTA_ID>'
+```
+
+## Limites desta versão
 
 A pontuação é uma projeção acadêmica dos registros internos e do cadastro atual, na janela de 12 meses de calendário da ocorrência. Não reconstrói CNH histórica nem garante saldo administrativo serializado sob ocorrências concorrentes. Alertas não suspendem ou cassam a CNH, não criam outras multas e não enviam mensagens externas.
 
