@@ -5,5 +5,8 @@ export function validarAtualizarVeiculo(
   id: unknown,
   input: unknown
 ): { id: string; dados: AtualizarVeiculoRequestDto } {
-  return { id: validarId(id), dados: validarDadosAtualizacao(input) };
+  return {
+    id: validarId(id),
+    dados: validarDadosAtualizacao(input)
+  };
 }

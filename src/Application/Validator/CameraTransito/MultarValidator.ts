@@ -1,12 +1,27 @@
-import { invalidar, validarDataComFuso, validarObjeto, validarPlaca, validarTexto, validarUuid } from './CameraTransitoValidator';
+import {
+  invalidar,
+  validarDataComFuso,
+  validarObjeto,
+  validarPlaca,
+  validarTexto,
+  validarUuid
+} from './CameraTransitoValidator';
 
 export function validarMultar(input: unknown) {
-  const obrigatorios = ['ocorrenciaId', 'codigoCamera', 'placa', 'catalogoMultaId', 'dataHoraOcorrencia', 'local'];
+  const obrigatorios = [
+    'ocorrenciaId',
+    'codigoCamera',
+    'placa',
+    'catalogoMultaId',
+    'dataHoraOcorrencia',
+    'local'
+  ];
   const dados = validarObjeto(input, [...obrigatorios, 'condutorId'], obrigatorios);
   const data = validarDataComFuso(dados.dataHoraOcorrencia, 'dataHoraOcorrencia');
   if (data > new Date()) {
     invalidar('dataHoraOcorrencia', 'A ocorrência deve ter data real, dentro do intervalo do banco e não futura.');
   }
+
   return {
     ocorrenciaId: validarUuid(dados.ocorrenciaId, 'ocorrenciaId'),
     codigoCamera: validarTexto(dados.codigoCamera, 'codigoCamera', 50).toUpperCase(),

@@ -12,7 +12,9 @@ function numeroInteiroPositivo(
   padrao: number,
   campo: string
 ): number {
-  if (valor === undefined) return padrao;
+  if (valor === undefined) {
+    return padrao;
+  }
 
   let numero: number;
   if (typeof valor === 'number') {
@@ -26,11 +28,17 @@ function numeroInteiroPositivo(
   if (!Number.isSafeInteger(numero) || numero < 1) {
     throw new ErroDadosCidadaoInvalidos(campo, `${campo} deve ser um inteiro positivo.`);
   }
+
   return numero;
 }
 
 export function validarListarCidadaos(input: unknown = {}): PaginacaoCidadao {
-  const consulta = validarObjeto(input, ['pagina', 'tamanhoPagina', 'nome', 'cpf']) as ListarCidadaosRequestDto;
+  const consulta = validarObjeto(input, [
+    'pagina',
+    'tamanhoPagina',
+    'nome',
+    'cpf'
+  ]) as ListarCidadaosRequestDto;
   const pagina = numeroInteiroPositivo(consulta.pagina, PAGINA_PADRAO, 'pagina');
   const tamanhoPagina = numeroInteiroPositivo(
     consulta.tamanhoPagina,
@@ -49,17 +57,26 @@ export function validarListarCidadaos(input: unknown = {}): PaginacaoCidadao {
     if (typeof consulta.nome !== 'string') {
       throw new ErroDadosCidadaoInvalidos('nome', 'nome deve ser texto.');
     }
-    if (consulta.nome.trim()) filtros.nome = consulta.nome.trim();
+    if (consulta.nome.trim()) {
+      filtros.nome = consulta.nome.trim();
+    }
   }
   if (consulta.cpf !== undefined) {
     if (typeof consulta.cpf !== 'string') {
       throw new ErroDadosCidadaoInvalidos('cpf', 'CPF deve ser texto.');
     }
-    if (consulta.cpf.trim()) filtros.cpf = normalizarCpf(consulta.cpf);
+    if (consulta.cpf.trim()) {
+      filtros.cpf = normalizarCpf(consulta.cpf);
+    }
   }
 
   if (!Number.isSafeInteger((pagina - 1) * tamanhoPagina)) {
     throw new ErroDadosCidadaoInvalidos('pagina', 'A pagina excede o intervalo permitido.');
   }
-  return { pagina, limite: tamanhoPagina, filtros };
+
+  return {
+    pagina,
+    limite: tamanhoPagina,
+    filtros
+  };
 }
